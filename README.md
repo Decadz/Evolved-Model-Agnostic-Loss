@@ -9,12 +9,11 @@ Christian Raymond, Qi Chen, Bing Xue, and Mengjie Zhang.
 
 ## Contents
 
-This repository contains an implementation of the proposed Evolved Model Agnostic Loss (EvoMAL) algorithm. 
-In addition, it contains code for reproducing loss function learning algorithms from the following papers:
+A PyTorch + Higher implementation of the newly proposed *Evolved Model-Agnostic Loss* (EvoMAL) algorithm. In addition, there is code for reproducing loss function learning algorithms from the following papers:
 
 * Meta-Learning via Learned Loss Supervised (Bechtle et al., 2021)
 * Optimizing Loss Functions Through Multivariate Taylor Polynomial Parameterization (Gonzalez et al., 2021)
-* Genetic Programming for Loss Function Learning
+* Genetic Programming for Loss Function Learning (Liu et al., 2021), (Li et al., 2021)
 
 ## Installation
 
