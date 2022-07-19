@@ -29,10 +29,12 @@ pip install requirements.txt
 ```
 
 ## Usage
+
 To meta-learn loss functions run the following command via the terminal:
 ```
 python experiments/run_learning.py --method method_name --dataset dataset_name --model model_name --seeds [seeds] --device device
 ```
+
 To transfer a previously meta-learned loss functions run the following command via the terminal:
 ```
 python experiments/run_transfer.py --method method_name --source_dataset dataset_name --source_model model_name --source_seed seed --target_dataset dataset_name --target_model model_name --target_seeds [seeds] --device device
@@ -63,7 +65,20 @@ or email me.
 
 ## Reference
 
-If you want to cite our paper, or the other loss function learning papers please use the following Bibtex entries:
+If you use our library please consider citing our paper with the following Bibtex entry:
+
+```
+@inproceedings{raymond2022learning,
+  title={Learning Symbolic Model-Agnostic Loss Functions via Meta-Learning},
+  author={Raymond, Christian and Chen, Qi and Xue, Bing and Zhang, Mengjie},
+  booktitle={},
+  pages={},
+  year={2022},
+  organization={}
+}
+```
+
+If you use the other implemented loss function learning algorithms, please cite their respective papers:
 
 ```
 @inproceedings{bechtle2021meta,
@@ -81,5 +96,20 @@ If you want to cite our paper, or the other loss function learning papers please
   booktitle={Proceedings of the Genetic and Evolutionary Computation Conference},
   pages={305--313},
   year={2021}
+}
+
+@article{liu2021loss,
+  title={Loss function discovery for object detection via convergence-simulation driven search},
+  author={Liu, Peidong and Zhang, Gengwei and Wang, Bochao and Xu, Hang and Liang, Xiaodan and Jiang, Yong and Li, Zhenguo},
+  journal={arXiv preprint arXiv:2102.04700},
+  year={2021}
+}
+
+@inproceedings{li2022autoloss,
+  title={Autoloss-zero: Searching loss functions from scratch for generic tasks},
+  author={Li, Hao and Fu, Tianwen and Dai, Jifeng and Li, Hongsheng and Huang, Gao and Zhu, Xizhou},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={1009--1018},
+  year={2022}
 }
 ```
