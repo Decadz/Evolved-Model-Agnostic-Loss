@@ -1,8 +1,11 @@
 # Evolved Model-Agnostic Loss
 
-This repository contains code to reproduce the experiments in the paper 
+This repository contains code for reproducing the experiments in the paper 
 "[*Learning Symbolic Model-Agnostic Loss Functions via Meta-Learning*]()" by 
-Christian Raymond, Qi Chen, Bing Xue and Mengjie Zhang.
+Christian Raymond, Qi Chen, Bing Xue, and Mengjie Zhang.
+
+![banner-image](https://user-images.githubusercontent.com/23614094/179725386-b3189ce7-d81b-48d6-886d-e97745c788a4.png)
+
 
 ## Contents
 
