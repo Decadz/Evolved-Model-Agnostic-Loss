@@ -77,39 +77,3 @@ If you use our library please consider citing our paper with the following Bibte
   organization={}
 }
 ```
-
-If you use the other implemented loss function learning algorithms, please cite their respective papers:
-
-```
-@inproceedings{bechtle2021meta,
-  title={Meta learning via learned loss},
-  author={Bechtle, Sarah and Molchanov, Artem and Chebotar, Yevgen and Grefenstette, Edward and Righetti, Ludovic and Sukhatme, Gaurav and Meier, Franziska},
-  booktitle={2020 25th International Conference on Pattern Recognition (ICPR)},
-  pages={4161--4168},
-  year={2021},
-  organization={IEEE}
-}
-
-@inproceedings{gonzalez2021optimizing,
-  title={Optimizing loss functions through multi-variate taylor polynomial parameterization},
-  author={Gonzalez, Santiago and Miikkulainen, Risto},
-  booktitle={Proceedings of the Genetic and Evolutionary Computation Conference},
-  pages={305--313},
-  year={2021}
-}
-
-@article{liu2021loss,
-  title={Loss function discovery for object detection via convergence-simulation driven search},
-  author={Liu, Peidong and Zhang, Gengwei and Wang, Bochao and Xu, Hang and Liang, Xiaodan and Jiang, Yong and Li, Zhenguo},
-  journal={arXiv preprint arXiv:2102.04700},
-  year={2021}
-}
-
-@inproceedings{li2022autoloss,
-  title={Autoloss-zero: Searching loss functions from scratch for generic tasks},
-  author={Li, Hao and Fu, Tianwen and Dai, Jifeng and Li, Hongsheng and Huang, Gao and Zhu, Xizhou},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-  pages={1009--1018},
-  year={2022}
-}
-```

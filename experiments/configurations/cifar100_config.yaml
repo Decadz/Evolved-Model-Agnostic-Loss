@@ -10,10 +10,10 @@ init_min_height: 2
 init_max_height: 4
 
 # Inner Optimization (Loss Optimization) Hyper-parameters
-meta_gradient_steps: 500
+meta_gradient_steps: 250
 meta_learning_rate: 0.001
 inner_gradient_steps: 1
-base_gradient_steps: 250
+base_gradient_steps: 500
 base_learning_rate: 0.01
 base_weight_decay: 0.0005
 base_momentum: 0.9
