@@ -9,11 +9,11 @@ Christian Raymond, Qi Chen, Bing Xue, and Mengjie Zhang.
 
 ## Contents
 
-A PyTorch + Higher implementation of the newly proposed *Evolved Model-Agnostic Loss* (EvoMAL) algorithm. In addition, there is code for reproducing loss function learning algorithms from the following papers:
+A [PyTorch](https://pytorch.org/) + [Higher](https://github.com/facebookresearch/higher) implementation of the newly proposed *Evolved Model-Agnostic Loss* (EvoMAL) algorithm. In addition, there is code for reproducing loss function learning algorithms from the following papers:
 
-* Meta-Learning via Learned Loss Supervised (Bechtle et al., 2021)
-* Optimizing Loss Functions Through Multivariate Taylor Polynomial Parameterization (Gonzalez et al., 2021)
-* Genetic Programming for Loss Function Learning (Liu et al., 2021), (Li et al., 2021)
+* Meta-Learning via Learned Loss Supervised ([Bechtle et al., 2021](https://arxiv.org/abs/1906.05374))
+* Optimizing Loss Functions Through Multivariate Taylor Polynomial Parameterization ([Gonzalez et al., 2021](https://arxiv.org/abs/2002.00059))
+* Genetic Programming for Loss Function Learning ([Liu et al., 2021](https://arxiv.org/abs/2102.04700)), ([Li et al., 2021](https://arxiv.org/abs/2103.14026))
 
 ## Installation
 
@@ -53,13 +53,13 @@ python experiments/run_landscapes.py --method method_name --dataset dataset_name
   
 ### Additional Notes: 
 
-* In addition to the compulsory arguments all hyper-parameters (found in the `configurations`) as well as the *device* can be given as optional arguments which will override the default values.
-* The `run_landscapes.py` script generates loss landscapes which can be either visualized directly in PyVista or exported to a `.vtk` file which can be reopened in the open sources software ParaView.
-* The meta-learned loss function and/or trained model used as a source for `run_transfer.py` or `run_landscapes.py` should be placed in the respective file in `experiments/results` in order for code to work as intended.
+* In addition to the compulsory arguments all hyper-parameters (found in `experiments/configurations/`) as well as the *device* can be given as optional arguments which will override the default values.
+* The `run_landscapes.py` script generates loss landscapes which can be either visualized directly in [PyVista](https://docs.pyvista.org/) or exported to a `.vtk` file which can be reopened in the open sources software [ParaView](https://www.paraview.org/).
+* The meta-learned loss function and/or trained model used as a source for `run_transfer.py` or `run_landscapes.py` should be placed in the respective folder in `experiments/results/` in order for code to work as intended.
 
 ### Code Reproducibility: 
 
-The code have not been comprehensively checked and re-run since refactoring. If you're having any issues, find
+The code has not been comprehensively checked and re-run since refactoring. If you're having any issues, find
 a problem/bug or cannot reproduce similar results as the paper please [open an issue](https://github.com/Decadz/Evolved-Model-Agnostic-Loss/issues)
 or email me.
 
