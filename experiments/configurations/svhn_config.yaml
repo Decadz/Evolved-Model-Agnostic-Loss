@@ -19,7 +19,6 @@ base_weight_decay: 0.0005
 base_momentum: 0.9
 base_nesterov: True
 base_batch_size: 128
-inverse_hessian_iterations: 10
 
 # Loss Function Learning Filter Hyper-parameters
 filter_significant_digits: 2
