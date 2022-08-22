@@ -7,7 +7,8 @@ class PyramidNet(torch.nn.Module):
     def __init__(self, depth=110, alpha=48, num_classes=10, log_softmax=False, **kwargs):
 
         """
-        Implementation of PyramidNet from the paper
+        Implementation of PyramidNet from the paper "Deep Pyramidal Residual
+        Networks" by Dongyoon Han, Jiwhan Kim, and Junmo Kim
         """
 
         super(PyramidNet, self).__init__()
