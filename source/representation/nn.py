@@ -3,7 +3,8 @@ import torch
 
 class NeuralNetwork(torch.nn.Module):
 
-    def __init__(self, output_dim, reduction="mean", output_activation=torch.nn.Softplus(), **kwargs):
+    def __init__(self, output_dim, reduction="mean", logits_to_prob=True, one_hot_encode=True,
+                 output_activation=torch.nn.Softplus(), **kwargs):
 
         """
         Creating a feed forward neural network meta loss function. Code inspired
@@ -11,19 +12,23 @@ class NeuralNetwork(torch.nn.Module):
 
         :param output_dim: Output vector dimension of base network.
         :param reduction: Reduction operator for aggregating results.
+        :param logits_to_prob: Apply transform to convert predicted output to probability.
+        :param one_hot_encode: Apply transform to convert label to one-hot encoded label.
         :param output_activation: Loss function output activation.
         """
 
         super(NeuralNetwork, self).__init__()
 
-        # Output dimension of the loss network.
+        # Meta-loss functions hyper-parameters.
         self.output_dim = output_dim
-
-        # Reduction type to go from vector to scalar.
         self.reduction = reduction
 
-        # Defining the meta-loss network.
-        self.loss = torch.nn.Sequential(
+        # Transformations to apply to the inputs.
+        self.logits_to_prob = logits_to_prob
+        self.one_hot_encode = one_hot_encode
+
+        # Defining the loss functions architecture.
+        self.network = torch.nn.Sequential(
             torch.nn.Linear(2, 50, bias=False),
             torch.nn.ReLU(),
             torch.nn.Linear(50, 50, bias=False),
@@ -39,30 +44,40 @@ class NeuralNetwork(torch.nn.Module):
 
     def forward(self, y_pred, y_target):
 
-        # Single output problem (e.g. regression or binary classification).
-        if self.output_dim == 1:
-            loss = self._compute_loss(y_pred, y_target)
+        # Transforming the prediction and target vectors.
+        y_pred, y_target = self._transform_input(y_pred, y_target)
 
-        else:  # Multi-output problem (e.g. multi-class classification).
-            y_target = torch.nn.functional.one_hot(y_target, num_classes=self.output_dim)
+        if self.output_dim == 1:  # If its a single-output problem.
+            loss = self.network(torch.cat((y_pred, y_target), dim=1))
+            return self._reduce_output(loss)
 
-            res = []  # Iterating over each class label in the encoded class vector.
-            for i in range(len(y_pred[0])):
+        else:  # If its a multi-output problem.
+            res = []  # Iterating over each output label.
+            for i in range(self.output_dim):
                 yp = torch.unsqueeze(y_pred[:, i], 1)
                 y = torch.unsqueeze(y_target[:, i], 1)
-                res.append(self._compute_loss(yp, y))
+                res.append(self.network(torch.cat((yp, y), dim=1)))
 
-            # Taking the summation across the classes.
+            # Taking the mean across the classes.
             loss = torch.stack(res, dim=0).sum(axis=0)
+            return self._reduce_output(loss)
 
-        # Applying the reduction operation to the loss vector.
+    def _transform_input(self, y_pred, y_target):
+
+        if self.logits_to_prob:  # Converting the raw logits into probabilities.
+            y_pred = torch.nn.functional.sigmoid(y_pred) if self.output_dim == 1 \
+                else torch.nn.functional.softmax(y_pred, dim=1)
+
+        if self.one_hot_encode:  # If the target is not already one-hot encoded.
+            y_target = torch.nn.functional.one_hot(y_target, num_classes=self.output_dim)
+
+        return y_pred, y_target
+
+    def _reduce_output(self, loss):
+        # Applying the desired reduction operation to the loss vector.
         if self.reduction == "mean":
             return loss.mean()
         elif self.reduction == "sum":
             return loss.sum()
         else:
             return loss
-
-    def _compute_loss(self, y_pred, y_target):
-        y = torch.cat((y_pred, y_target), dim=1)
-        return self.loss(y)

@@ -1,7 +1,7 @@
 from source.representation.gp import GeneticProgrammingTree
 
 
-def phase_transformer(expression_tree, output_dim, parameterize, device):
+def phase_transformer(expression_tree, output_dim, parameterize, logits_to_prob, one_hot_encode, device):
 
     """
     Converts a DEAP expression tree and converts it into a PyTorch network.
@@ -9,6 +9,8 @@ def phase_transformer(expression_tree, output_dim, parameterize, device):
     :param expression_tree: DEAP expression tree.
     :param output_dim: Dimensions of output from base network.
     :param parameterize Whether the expression should be parameterized for training.
+    :param logits_to_prob: Apply transform to convert predicted output to probability.
+    :param one_hot_encode: Apply transform to convert label to one-hot encoded label.
     :param device: Device used for Pytorch related components {"cpu", "cuda"}.
     :return: PyTorch meta-loss network.
     """
@@ -18,7 +20,8 @@ def phase_transformer(expression_tree, output_dim, parameterize, device):
     adjacency_list = _transpose_graph(adjacency_list)
 
     # Takes the adjacency list and creates a PyTorch network (DAG).
-    return GeneticProgrammingTree(expression_tree, adjacency_list, output_dim, parameterize, device)
+    return GeneticProgrammingTree(expression_tree, adjacency_list, output_dim, parameterize, device,
+                                  logits_to_prob=logits_to_prob, one_hot_encode=one_hot_encode)
 
 
 def _create_adjacency_list(expression_tree):

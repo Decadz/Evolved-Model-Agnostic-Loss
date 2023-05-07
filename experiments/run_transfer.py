@@ -51,23 +51,6 @@ if device is not None:
     device = args.device
 
 # ============================================================
-# Available datasets and models for experiments.
-# ============================================================
-
-dataset_archive = {
-    "mnist": {"data": MNIST, "config": directory + "configurations/mnist_config.yaml"},
-    "cifar10": {"data": CIFAR10, "config": directory + "configurations/cifar10_config.yaml"},
-    "cifar100": {"data": CIFAR100, "config": directory + "configurations/cifar100_config.yaml"},
-    "svhn": {"data": SVHN, "config": directory + "configurations/svhn_config.yaml"}
-}
-
-model_archive = {
-    "lenet5": LeNet5, "alexnet": AlexNet, "vgg": VGG, "allcnnc": AllCNNC,
-    "resnet": ResNet, "preresnet": PreResNet, "wideresnet": WideResNet,
-    "squeezenet": SqueezeNet, "pyramidnet": PyramidNet
-}
-
-# ============================================================
 # Constructing and executing experiments.
 # ============================================================
 
@@ -142,11 +125,6 @@ def _run_transfer_experiment(dataset, target_model, target_config, source_config
 
     print("Execution Seed", str(random_state), "Complete")
 
-
-objective_archive = {
-    "MultiErrorRate": MultiErrorRate(), "BinaryErrorRate": BinaryErrorRate(),
-    "NLLLoss": torch.nn.NLLLoss(), "BCELoss": torch.nn.BCELoss(), "MSELoss": torch.nn.MSELoss()
-}
 
 # Opening the relevant configurations file.
 with open(dataset_archive[args.source_dataset]["config"]) as file:

@@ -24,8 +24,6 @@ def register_configurations(parser):
     parser.add_argument("--base_batch_size", required=False, type=int)
 
     # Loss Function Learning Filter Hyper-parameters
-    parser.add_argument("--filter_significant_digits", required=False, type=int)
-    parser.add_argument("--filter_rejection_threshold", required=False, type=float)
     parser.add_argument("--filter_gradient_steps", required=False, type=int)
     parser.add_argument("--filter_sample_size", required=False, type=int)
 

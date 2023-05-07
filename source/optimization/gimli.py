@@ -2,7 +2,6 @@ import torch
 import higher
 
 from tqdm import tqdm
-from source.optimization.utilities.checkpointing import model_checkpointing
 
 
 class GeneralizedInnerLoopMetaLearning:
@@ -83,11 +82,6 @@ class GeneralizedInnerLoopMetaLearning:
             network = self.base_network(**self.base_network_parameters).to(self.device)
             base_models.append(network)
 
-            # Disabling all dropout layers during meta-training.
-            for module in base_models[i].modules():
-                if isinstance(module, torch.nn.Dropout):
-                    module.p = 0
-
             # Creating a new optimizer for each base network.
             base_optimizers.append(torch.optim.SGD(
                 base_models[i].parameters(), lr=self.base_learning_rate,
@@ -99,16 +93,19 @@ class GeneralizedInnerLoopMetaLearning:
             training_task_generators.append(torch.utils.data.DataLoader(
                 training_tasks[i], batch_size=self.base_batch_size, shuffle=True))
 
+            validation_task_generators.append(torch.utils.data.DataLoader(
+                validation_tasks[i], batch_size=self.base_batch_size, shuffle=True))
+
         # Performing the generalized inner loop meta-learning.
         training_history = self._inner_loop_learning(
             meta_network, base_models, base_optimizers,
-            training_task_generators, validation_tasks
+            training_task_generators, validation_task_generators
         )
 
         return meta_network, {"meta-training": training_history}
 
     def _inner_loop_learning(self, meta_network, base_models, base_optimizers,
-                             training_task_generators, validation_tasks):
+                             training_task_generators, validation_task_generators):
 
         # Defining the outer optimizer for the meta-loss network.
         meta_optimizer = torch.optim.Adam(meta_network.parameters(), lr=self.meta_learning_rate)
@@ -116,10 +113,7 @@ class GeneralizedInnerLoopMetaLearning:
         # List for keeping track of the learning history.
         training_history = []
 
-        # Saving the best meta-loss function parameters and the validation performance.
-        best_loss_parameters, best_loss_performance = None, None
-
-        # Performing the meta-training phase to learn the meta-objects parameters.
+        # Performing the offline initialization phase to learn the learned loss functions parameters (phi).
         for step in tqdm(range(self.meta_gradient_steps), desc="GIMLI Progression", position=0,
                          disable=False if self.verbose >= 1 else True, leave=False):
 
@@ -136,56 +130,40 @@ class GeneralizedInnerLoopMetaLearning:
             # For each training task in the task distribution.
             for i in range(len(training_task_generators)):
 
-                # Extracting the current batch for the current task.
-                X, y = next(iter(training_task_generators[i]))
-
-                # Sending data to the correct device.
-                X = X.to(self.device)
-                y = y.to(self.device)
-
-                # Creating a differentiable optimizer and stateless models via higher.
+                # Creating a differentiable optimizer and stateless models via PyTorch higher.
                 with higher.innerloop_ctx(base_models[i], base_optimizers[i],
                                           copy_initial_weights=False) as (fmodel, diffopt):
 
                     # Taking a predetermined number of inner steps before meta update.
                     for inner_steps in range(self.inner_gradient_steps):
 
-                        # Update the base networks parameters via the meta-loss network.
-                        yp = fmodel(X)  # Base network predictions.
-                        base_loss = meta_network(yp, y)  # Finding the loss wrt. meta-loss network.
-                        diffopt.step(base_loss)  # Update base network weights.
+                        # Extracting a new training batch from the current task.
+                        X_train, y_train = next(iter(training_task_generators[i]))
+                        X_train, y_train = X_train.to(self.device), y_train.to(self.device)
 
-                    # Compute the task loss with the new model.
-                    yp = fmodel(X)  # Base network predictions with new weights.
-                    task_loss = self.task_loss(yp, y)  # Finding the loss wrt. task-loss.
+                        # Computing the loss using the learned loss and updating the base weights.
+                        yp_train = fmodel(X_train)  # Computing the base network predictions.
+                        base_loss = meta_network(yp_train, y_train)  # Finding the loss wrt. learned-loss.
+                        diffopt.step(base_loss)  # Update base network weights (theta).
+
+                    # Extracting a validation batch from the current task.
+                    X_train, y_train = next(iter(validation_task_generators[i]))
+                    X_train, y_train = X_train.to(self.device), y_train.to(self.device)
+
+                    # Computing predictions on the validation sets.
+                    yp_train = fmodel(X_train)  # Predictions with new weights on the validation set.
+
+                    # Computing the task loss and updating the meta weights.
+                    task_loss = self.task_loss(yp_train, y_train)  # Finding the loss wrt. meta (task) loss.
                     task_loss.backward()  # Accumulates gradients wrt. to meta parameters.
-                    task_history.append(self.performance_metric(yp, y).item())
 
-            # Appending the average (mean) task loss to the tracker.
-            training_history.append(sum(task_history) / len(training_task_generators))
+                    # Storing the validation performance history.
+                    task_history.append(self.performance_metric(yp_train, y_train).item())
 
-            # Update meta-loss network weights.
+                # Appending the average (mean) task loss to the tracker.
+                training_history.append(sum(task_history) / len(training_task_generators))
+
+            # Update meta-loss network weights (phi).
             meta_optimizer.step()
-
-            # Every 10% of the maximum gradient steps evaluate the validation error.
-            if step % (self.meta_gradient_steps/10) == 0 and step != 0 and validation_tasks is not None:
-
-                performance = model_checkpointing(
-                    meta_network=meta_network,
-                    base_models=base_models,
-                    base_optimizers=base_optimizers,
-                    training_task=training_task_generators,
-                    validation_tasks=validation_tasks,
-                    base_gradient_steps=self.base_gradient_steps,
-                    performance_metric=self.performance_metric,
-                    device=self.device
-                )
-
-                if best_loss_parameters is None or best_loss_performance > performance:
-                    best_loss_parameters = meta_network.state_dict()
-                    best_loss_performance = performance
-
-        if best_loss_parameters is not None:
-            meta_network.load_state_dict(best_loss_parameters)
 
         return training_history

@@ -15,18 +15,15 @@ from tqdm import tqdm
 import random as rd
 import numpy as np
 import torch
-import math
 
 
 class EvolutionaryAlgorithm:
 
-    def __init__(self, base_network, base_network_parameters, local_search, population_size,
-                 num_generations, crossover_rate, mutation_rate, elitism_rate, tournament_size,
-                 max_height, init_min_height, init_max_height, filter_significant_digits,
-                 filter_rejection_threshold, filter_gradient_steps, filter_sample_size,
-                 base_gradient_steps, base_learning_rate, base_weight_decay, base_momentum,
-                 base_nesterov, base_batch_size, performance_metric, random_state, verbose,
-                 device, **kwargs):
+    def __init__(self, base_network, base_network_parameters, local_search, population_size, num_generations,
+                 crossover_rate, mutation_rate, elitism_rate, tournament_size, max_height, init_min_height,
+                 init_max_height, filter_gradient_steps, filter_sample_size, base_gradient_steps,
+                 base_learning_rate, base_weight_decay, base_momentum, base_nesterov, base_batch_size,
+                 performance_metric, random_state, verbose, device, **kwargs):
 
         """
         Implementation of a vanilla evolutionary algorithm. This module specifically,
@@ -45,8 +42,6 @@ class EvolutionaryAlgorithm:
         :param max_height: Max expression tree height [N+].
         :param init_min_height: Minimum mutation expression tree height [N+].
         :param init_max_height: Maximum mutation expression tree height [N+].
-        :param filter_significant_digits: Number of significant digits in gradient equivalence.
-        :param filter_rejection_threshold: Rejection threshold in rejection protocol.
         :param filter_gradient_steps: Gradient steps for optimizing the predictions.
         :param filter_sample_size: Number of predictions to sample.
         :param base_gradient_steps: Number of gradient for partial training session.
@@ -77,10 +72,6 @@ class EvolutionaryAlgorithm:
         self.mutation_rate = mutation_rate
         self.elitism_rate = elitism_rate
         self.tournament_size = tournament_size
-
-        # Evolutionary filter hyper-parameters.
-        self.significant_digits = filter_significant_digits
-        self.rejection_threshold = filter_rejection_threshold
 
         # Implicit GP hyper-parameters.
         self.max_height = max_height
@@ -114,7 +105,7 @@ class EvolutionaryAlgorithm:
             device=device
         )
 
-    def train(self, representation, training_tasks, validation_tasks):
+    def train(self, representation, training_tasks, validation_tasks, task_type):
 
         """
         Performs the meta-training phase using an evolutionary algorithm to optimize the given
@@ -136,12 +127,10 @@ class EvolutionaryAlgorithm:
 
         # Archive for keeping track of seen loss functions and their fitness.
         symbolic_equivalence_archive = {}
-        gradient_equivalence_archive = {}
 
         # List for keeping track of loss function filter performance.
         symbolic_equivalence_history = [0] * self.num_generations
         rejection_protocol_history = [0] * self.num_generations
-        gradient_equivalence_history = [0] * self.num_generations
 
         # Creating the initial population of loss functions.
         population = self._initialize_population()
@@ -168,39 +157,28 @@ class EvolutionaryAlgorithm:
                     expression_tree=expression,
                     output_dim=self.base_network_parameters["output_dim"],
                     parameterize=self.parameterize,
+                    logits_to_prob=True if task_type == "classification" else False,
+                    one_hot_encode=True if task_type == "classification" else False,
                     device=self.device
                 )
 
                 # Performing the meta-training backpropagation stage.
                 if self.local_search is not None:
-                    self.local_search.train(meta_network, training_tasks, None)
+                    self.local_search.train(meta_network, training_tasks, validation_tasks)
 
                 # Generating a sample of predicted and true labels for the following filter.
                 pred_labels, true_labels = self.loss_filters.compute_predictions(training_tasks)
 
                 # Computing the rejection protocol correlation and final prediction vector.
-                correlation, predictions = self.loss_filters.rejection_protocol(meta_network, pred_labels, true_labels)
+                reject = self.loss_filters.rejection_protocol(
+                    meta_network, pred_labels, true_labels, task_type
+                )
 
                 # Evaluating the rejection protocol filter.
-                if correlation <= self.rejection_threshold:
+                if reject:
                     rejection_protocol_history[gen] += 1
                     expression.fitness.values = [float("inf")]
                     continue
-
-                # Computing the mean gradient norm of the prediction vector.
-                gradient_norm = self.loss_filters.gradient_equivalence(predictions)
-
-                # Comparing against all previous solutions
-                for key, value in gradient_equivalence_archive.items():
-
-                    # Comparing the current norm values to all the others.
-                    compare = [math.isclose(a, b, abs_tol=10 ** -2)for a, b in zip(gradient_norm, value)]
-
-                    # If all values are equivalent up to 2 decimal points.
-                    if not compare.__contains__(False):
-                        expression.fitness.values = symbolic_equivalence_archive[key]
-                        gradient_equivalence_history[gen] += 1
-                        break
 
                 # If the fitness function has not yet been set, evaluate it.
                 if not expression.fitness.values:
@@ -208,7 +186,6 @@ class EvolutionaryAlgorithm:
                     # Evaluating the meta learned loss functions fitness.
                     fitness = self._fitness_evaluation(meta_network, training_tasks, validation_tasks)
                     symbolic_equivalence_archive[str(expression)] = [fitness]
-                    gradient_equivalence_archive[str(expression)] = gradient_norm
                     expression.fitness.values = [fitness]
 
                 # Updating the best expression/loss found by EvoMAL.
@@ -224,8 +201,7 @@ class EvolutionaryAlgorithm:
         return best_loss_network, {
             "meta-training": training_history,
             "symbolic_equivalence_history": symbolic_equivalence_history,
-            "rejection_protocol_history": rejection_protocol_history,
-            "gradient_equivalence_history": gradient_equivalence_history
+            "rejection_protocol_history": rejection_protocol_history
         }
 
     def _evolve(self, population, num_offspring):

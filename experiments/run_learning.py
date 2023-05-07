@@ -4,13 +4,14 @@ sys.path.append(os.getcwd())
 from experiments.resources import *
 from source import *
 
-import functools
 import argparse
 import torch
 import random
 import numpy
 import time
 import yaml
+
+# python experiments/run_learning.py --method baseline --dataset mnist --model lenet5 --seeds 99
 
 # Use the GPU/CUDA when available, else use the CPU.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -47,23 +48,6 @@ if args.device is not None:
     device = args.device
 
 # ============================================================
-# Available datasets and models for experiments.
-# ============================================================
-
-dataset_archive = {
-    "mnist": {"data": MNIST, "config": directory + "configurations/mnist_config.yaml"},
-    "cifar10": {"data": CIFAR10, "config": directory + "configurations/cifar10_config.yaml"},
-    "cifar100": {"data": CIFAR100, "config": directory + "configurations/cifar100_config.yaml"},
-    "svhn": {"data": SVHN, "config": directory + "configurations/svhn_config.yaml"}
-}
-
-model_archive = {
-    "lenet5": LeNet5, "alexnet": AlexNet, "vgg": VGG, "allcnnc": AllCNNC,
-    "resnet": ResNet, "preresnet": PreResNet, "wideresnet": WideResNet,
-    "squeezenet": SqueezeNet, "pyramidnet": PyramidNet
-}
-
-# ============================================================
 # Constructing and executing experiments.
 # ============================================================
 
@@ -90,8 +74,7 @@ def _run_baseline_experiment(dataset, model, config, random_state):
     results = {"start_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}
 
     lfl = LossFunctionLearning(
-        representation=None, optimization=None,
-        base_network=functools.partial(model, log_softmax=True),
+        representation=None, optimization=None, base_network=model,
         random_state=random_state, device=device, **config
     )
 
@@ -373,11 +356,6 @@ experiment_executors = {
     "ml3": _run_ml3_experiment,
     "taylorglo": _run_taylorglo_experiment,
     "evomal": _run_evomal_experiment
-}
-
-objective_archive = {
-    "MultiErrorRate": MultiErrorRate(), "BinaryErrorRate": BinaryErrorRate(),
-    "NLLLoss": torch.nn.NLLLoss(), "BCELoss": torch.nn.BCELoss(), "MSELoss": torch.nn.MSELoss()
 }
 
 # Opening the relevant configurations file.

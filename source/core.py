@@ -12,7 +12,7 @@ class LossFunctionLearning:
     def __init__(self, representation, optimization, base_network, base_network_parameters,
                  testing_gradient_steps, testing_learning_rate, testing_weight_decay,
                  testing_momentum, testing_nesterov, testing_batch_size, testing_milestones,
-                 testing_gamma, device, random_state, verbose=0, **kwargs):
+                 testing_gamma, device, random_state, task_type, verbose=0, **kwargs):
 
         """
         Loss function learning object which is used to manage the meta-learning of
@@ -31,6 +31,7 @@ class LossFunctionLearning:
         :param testing_gamma: Meta-testing scheduler decay rate.
         :param device: Device used for Pytorch related components {"cpu", "cuda"}.
         :param random_state: Random state for reproducibility [N].
+        :param task_type: Whether this is a classification or regression task.
         :param verbose: Display console output at different levels {0, 1}.
         """
 
@@ -60,6 +61,7 @@ class LossFunctionLearning:
 
         # Administrative hyper-parameters.
         self.random_state = random_state
+        self.task_type = task_type
         self.verbose = verbose
         self.device = device
 
@@ -88,14 +90,22 @@ class LossFunctionLearning:
             self.meta_loss_function = None
 
         elif self.representation == "nn" and not self.optimization.is_population_based:
-            self.meta_loss_function = nn.NeuralNetwork(**self.base_network_parameters).to(self.device)
+            self.meta_loss_function = nn.NeuralNetwork(
+                logits_to_prob=True if self.task_type == "classification" else False,
+                one_hot_encode=True if self.task_type == "classification" else False,
+                **self.base_network_parameters
+            ).to(self.device)
 
         elif self.representation == "tp" and not self.optimization.is_population_based:
-            self.meta_loss_function = tp.TaylorPolynomials(**self.base_network_parameters).to(self.device)
+            self.meta_loss_function = tp.TaylorPolynomials(
+                logits_to_prob=True if self.task_type == "classification" else False,
+                one_hot_encode=True if self.task_type == "classification" else False,
+                **self.base_network_parameters
+            ).to(self.device)
 
         if self.optimization.is_population_based:  # If optimizer is population-based.
             loss_function, history = self.optimization.train(
-                self.representation, training_tasks, validation_tasks
+                self.representation, training_tasks, validation_tasks, self.task_type
             )
 
         else:  # If optimizer is not population-based.
@@ -125,8 +135,7 @@ class LossFunctionLearning:
             tasks = [tasks]
 
         # List for storing all the trained models.
-        models = []
-        learning = []
+        models, learning = [], []
 
         # For each task in the training set.
         for i in range(len(tasks)):

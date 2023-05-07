@@ -3,7 +3,7 @@ import torch
 
 class AllCNNC(torch.nn.Module):
 
-    def __init__(self, output_dim, log_softmax=False, **kwargs):
+    def __init__(self, output_dim, **kwargs):
 
         """
         Implementation of All-CNN-C model from the paper "Striving for
@@ -42,9 +42,6 @@ class AllCNNC(torch.nn.Module):
         self.bn9 = torch.nn.BatchNorm2d(output_dim)
         self.pool = torch.nn.AvgPool2d(6, output_dim)
 
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
-
         # Initializing the weights of the network.
         self.reset()
 
@@ -60,5 +57,4 @@ class AllCNNC(torch.nn.Module):
         out = self.drop1(self.bn3(self.conv3(self.relu(self.bn2(self.conv2(self.relu(self.bn1(self.conv1(x)))))))))
         out = self.drop2(self.bn6(self.conv6(self.relu(self.bn5(self.conv5(self.relu(self.bn4(self.conv4(out)))))))))
         out = self.pool(self.bn9(self.conv9(self.relu(self.bn8(self.conv8(self.relu(self.bn7(self.conv7(out)))))))))
-        out = out.view(out.size(0), -1)
-        return self.out(out)
+        return out.view(out.size(0), -1)

@@ -5,7 +5,8 @@ import torch
 class GeneticProgrammingTree(torch.nn.Module):
 
     def __init__(self, expression_tree, adjacency_list, output_dim, parameterize, device,
-                 reduction="mean", output_activation=torch.nn.Identity(), **kwargs):
+                 reduction="mean", logits_to_prob=True, one_hot_encode=True,
+                 output_activation=torch.nn.Identity(), **kwargs):
 
         """
         Parameterized Genetic Programming expression tree which can be further optimized
@@ -16,12 +17,19 @@ class GeneticProgrammingTree(torch.nn.Module):
         :param output_dim: Dimensions of output from base network.
         :param parameterize Whether the expression should be parameterized for training.
         :param reduction: Reduction operator for aggregating results.
+        :param logits_to_prob: Apply transform to convert predicted output to probability.
+        :param one_hot_encode: Apply transform to convert label to one-hot encoded label.
         :param output_activation: Loss function output activation.
         :param device: Device used for Pytorch related components {"cpu", "cuda"}.
         """
 
         super(GeneticProgrammingTree, self).__init__()
 
+        # Transformations to apply to the inputs.
+        self.logits_to_prob = logits_to_prob
+        self.one_hot_encode = one_hot_encode
+
+        # Loss functions hyper-parameters.
         self.expression_tree = expression_tree
         self.adjacency_list = adjacency_list
         self.output_dim = output_dim
@@ -51,21 +59,16 @@ class GeneticProgrammingTree(torch.nn.Module):
         :return: Average loss across the batch using the meta-loss network.
         """
 
-        # Regression or binary classification problem.
-        if self.output_dim == 1:
+        # Transforming the prediction and target vectors.
+        y_pred, y_target = self._transform_input(y_pred, y_target)
+
+        if self.output_dim == 1:  # If its a single-output problem.
             loss = self._compute_loss(y_pred, y_target)
+            return self._reduce_output(loss)
 
-        else:  # Multi-class classification problem.
-            y_target = torch.nn.functional.one_hot(y_target, num_classes=self.output_dim)
+        else:  # If its a multi-output problem.
             loss = self._compute_loss(y_pred, y_target).sum(axis=1)
-
-        # Applying the reduction operation to the loss vector.
-        if self.reduction == "mean":
-            return loss.mean()
-        elif self.reduction == "sum":
-            return loss.sum()
-        else:
-            return loss
+            return self._reduce_output(loss)
 
     def _compute_loss(self, y_pred, y_target):
 
@@ -125,6 +128,25 @@ class GeneticProgrammingTree(torch.nn.Module):
         # Applying the output activation and returning the loss.
         return self.output_activation(results[0])
 
+    def _transform_input(self, y_pred, y_target):
+        if self.logits_to_prob:  # Converting the raw logits into probabilities.
+            y_pred = torch.nn.functional.sigmoid(y_pred) if self.output_dim == 1 \
+                else torch.nn.functional.softmax(y_pred, dim=1)
+
+        if self.one_hot_encode:  # If the target is not already one-hot encoded.
+            y_target = torch.nn.functional.one_hot(y_target, num_classes=self.output_dim)
+
+        return y_pred, y_target
+
+    def _reduce_output(self, loss):
+        # Applying the desired reduction operation to the loss vector.
+        if self.reduction == "mean":
+            return loss.mean()
+        elif self.reduction == "sum":
+            return loss.sum()
+        else:
+            return loss
+
     def __str__(self):
         string, node_stack, param_stack = "", [], []
 
@@ -133,7 +155,7 @@ class GeneticProgrammingTree(torch.nn.Module):
 
             # Adding the current node and weight to their stacks.
             node_stack.append((self.expression_tree[i], []))
-            param_stack.append(str(self._parameters[str(i)].item()))
+            param_stack.append(str(round(self._parameters[str(i)].item(), 5)))
 
             while len(node_stack[-1][1]) == node_stack[-1][0].arity:
                 prim, args = node_stack.pop()

@@ -52,10 +52,9 @@ class LossFunctionFilters:
 
         return pred_labels, true_labels
 
-    def rejection_protocol(self, loss_function, pred_labels, true_labels):
+    def rejection_protocol(self, loss_function, pred_labels, true_labels, task_type):
 
         difference_performance = []
-        optimized_predictions = []
 
         for pred, true in zip(pred_labels, true_labels):
 
@@ -64,8 +63,7 @@ class LossFunctionFilters:
             predictions = pred.detach().clone().requires_grad_(True)
 
             # Creating an optimizer for optimizing the predictions.
-            optimizer = torch.optim.SGD([predictions], lr=self.learning_rate,
-                                        momentum=self.momentum, nesterov=self.nesterov)
+            optimizer = torch.optim.Adam([predictions], lr=self.learning_rate)
 
             for step in range(self.filter_gradient_steps):
 
@@ -85,20 +83,15 @@ class LossFunctionFilters:
 
             # Recording the difference between the baseline and optimized.
             difference_performance.append(baseline - optimized)
-            optimized_predictions.append(predictions)
 
-        # Computing the average correlation across the samples.
-        correlation = torch.mean(torch.stack(difference_performance))
+        reject = False  # Flag for determining whether the loss function should be rejected.
 
-        return correlation.item(), optimized_predictions
+        if task_type == "classification":
+            # Computing the average correlation across the samples.
+            correlation = torch.mean(torch.stack(difference_performance))
+            reject = True if correlation <= 0 else False
+        elif task_type == "regression":
+            correlation = torch.mean(torch.stack(difference_performance))
+            reject = True if correlation <= 0 else False
 
-    def gradient_equivalence(self, predictions):
-        norms = []  # List of all the gradient norms.
-
-        # Computing the norm across all the randomly sampled tasks.
-        for task in predictions:
-            for pred_vector in task.grad:
-                norms.append(torch.norm(pred_vector).item())
-
-        # Returning the list of gradient norms.
-        return norms
+        return reject

@@ -1,29 +1,26 @@
 import torch
 
 
-config = {
-    11: [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    13: [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    16: [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    19: [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
-}
+class _VGG(torch.nn.Module):
 
-
-class VGG(torch.nn.Module):
-
-    def __init__(self, vgg_version=16, output_dim=10, log_softmax=False, **kwargs):
+    def __init__(self, vgg_version=16, output_dim=10, **kwargs):
 
         """
         Implementation of VGG from the paper "Very Deep Convolutional Networks
         for Large-Scale Image Recognition" by Karen Simonyan, Andrew Zisserman.
         """
 
-        super(VGG, self).__init__()
+        super(_VGG, self).__init__()
+
+        config = {
+            11: [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+            13: [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+            16: [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+            19: [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+        }
+
         self.features = self._make_layers(config[vgg_version])
         self.classifier = torch.nn.Linear(512, output_dim)
-
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
 
         # Initializing the weights of the network.
         self.reset()
@@ -56,5 +53,28 @@ class VGG(torch.nn.Module):
     def forward(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
-        out = self.classifier(out)
-        return self.out(out)
+        return self.classifier(out)
+
+
+class VGG11(_VGG):
+
+    def __init__(self, **kwargs):
+        super(VGG11, self).__init__(vgg_version=11, **kwargs)
+
+
+class VGG13(_VGG):
+
+    def __init__(self, **kwargs):
+        super(VGG13, self).__init__(vgg_version=13, **kwargs)
+
+
+class VGG16(_VGG):
+
+    def __init__(self, **kwargs):
+        super(VGG16, self).__init__(vgg_version=16, **kwargs)
+
+
+class VGG19(_VGG):
+
+    def __init__(self, **kwargs):
+        super(VGG19, self).__init__(vgg_version=19, **kwargs)

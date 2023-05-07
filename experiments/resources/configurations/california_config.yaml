@@ -1,0 +1,49 @@
+# Outer Optimization (Loss Discovery) Hyper-parameters
+population_size: 25
+num_generations: 50
+crossover_rate: 0.7
+mutation_rate: 0.25
+elitism_rate: 0.05
+tournament_size: 4
+max_height: 10
+init_min_height: 2
+init_max_height: 4
+
+# Inner Optimization (Loss Optimization) Hyper-parameters
+meta_gradient_steps: 250
+meta_learning_rate: 0.001
+inner_gradient_steps: 1
+base_gradient_steps: 500
+base_learning_rate: 0.01
+base_weight_decay: 0.0005
+base_momentum: 0.9
+base_nesterov: True
+base_batch_size: 128
+
+# Loss Function Learning Filter Hyper-parameters
+filter_gradient_steps: 1000
+filter_sample_size: 100
+
+# Loss Function Learning Objectives
+outer_objective_name: "mseloss"
+inner_objective_name: "mseloss"
+
+# Meta Testing Hyper-parameters
+testing_gradient_steps: 10000
+testing_learning_rate: 0.01
+testing_weight_decay: 0.0005
+testing_momentum: 0.9
+testing_nesterov: True
+testing_batch_size: 128
+testing_milestones: []
+testing_gamma: 0
+
+# Base Network Hyper-parameters
+base_network_parameters:
+  input_dim: 8
+  output_dim: 1
+
+# Experiment Settings
+task_type: "regression"
+output_path: results/california/
+verbose: 2

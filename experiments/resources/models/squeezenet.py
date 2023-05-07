@@ -3,7 +3,7 @@ import torch
 
 class SqueezeNet(torch.nn.Module):
 
-    def __init__(self, output_dim=10, log_softmax=False, **kwargs):
+    def __init__(self, output_dim=10, **kwargs):
 
         """
         Implementation of SqueezeNet from the paper "SqueezeNet: AlexNet-level
@@ -33,9 +33,6 @@ class SqueezeNet(torch.nn.Module):
         self.avg = torch.nn.AdaptiveAvgPool2d(1)
         self.maxpool = torch.nn.MaxPool2d(2, 2)
 
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
-
         # Initializing the weights of the network.
         self.reset()
 
@@ -61,8 +58,7 @@ class SqueezeNet(torch.nn.Module):
         f9 = self.fire9(f8)
         c10 = self.conv10(f9)
         out = self.avg(c10)
-        out = out.view(out.size(0), -1)
-        return self.out(out)
+        return out.view(out.size(0), -1)
 
 
 class _Fire(torch.nn.Module):

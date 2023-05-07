@@ -21,14 +21,12 @@ base_nesterov: True
 base_batch_size: 128
 
 # Loss Function Learning Filter Hyper-parameters
-filter_significant_digits: 2
-filter_rejection_threshold: 0.6
 filter_gradient_steps: 1000
 filter_sample_size: 100
 
 # Loss Function Learning Objectives
-outer_objective_name: "MultiErrorRate"
-inner_objective_name: "NLLLoss"
+outer_objective_name: "multierrorrate"
+inner_objective_name: "celoss"
 
 # Meta Testing Hyper-parameters
 testing_gradient_steps: 150000
@@ -45,5 +43,6 @@ base_network_parameters:
   output_dim: 100
 
 # Experiment Settings
+task_type: "classification"
 output_path: results/svhn/
 verbose: 2

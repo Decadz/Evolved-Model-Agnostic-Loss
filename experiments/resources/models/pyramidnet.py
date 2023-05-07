@@ -4,7 +4,7 @@ import math
 
 class PyramidNet(torch.nn.Module):
 
-    def __init__(self, depth=110, alpha=48, num_classes=10, log_softmax=False, **kwargs):
+    def __init__(self, depth=110, alpha=48, num_classes=10, **kwargs):
 
         """
         Implementation of PyramidNet from the paper "Deep Pyramidal Residual
@@ -36,9 +36,6 @@ class PyramidNet(torch.nn.Module):
 
         # Feed forward block
         self.fc = torch.nn.Linear(self.final_featuremap_dim, num_classes)
-
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
 
         # Initializing the weights of the network.
         self.reset()
@@ -82,8 +79,7 @@ class PyramidNet(torch.nn.Module):
         out = self.relu_final(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
-        out = self.fc(out)
-        return self.out(out)
+        return self.fc(out)
 
 
 class _BasicBlock(torch.nn.Module):

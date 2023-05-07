@@ -1,9 +1,9 @@
 import torch
 
 
-class ResNet(torch.nn.Module):
+class _ResNet(torch.nn.Module):
 
-    def __init__(self, resnet_version=50, output_dim=10, log_softmax=False, **kwargs):
+    def __init__(self, resnet_version=50, output_dim=10, **kwargs):
 
         """
         Implementation of ResNets from the paper "Deep Residual Learning
@@ -11,7 +11,7 @@ class ResNet(torch.nn.Module):
         Ren, and Jian Sun.
         """
 
-        super(ResNet, self).__init__()
+        super(_ResNet, self).__init__()
 
         if resnet_version == 18:
             block, num_blocks = _BasicBlock, [2, 2, 2, 2]
@@ -33,9 +33,6 @@ class ResNet(torch.nn.Module):
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.linear = torch.nn.Linear(512 * block.expansion, output_dim)
-
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
 
         # Initializing the weights of the network.
         self.reset()
@@ -67,8 +64,7 @@ class ResNet(torch.nn.Module):
         out = self.layer4(out)
         out = torch.nn.functional.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        out = self.linear(out)
-        return self.out(out)
+        return self.linear(out)
 
 
 class _BasicBlock(torch.nn.Module):
@@ -128,3 +124,33 @@ class _Bottleneck(torch.nn.Module):
         out += self.shortcut(x)
         out = torch.nn.functional.relu(out)
         return out
+
+
+class ResNet18(_ResNet):
+
+    def __init__(self, **kwargs):
+        super(ResNet18, self).__init__(resnet_version=18, **kwargs)
+
+
+class ResNet34(_ResNet):
+
+    def __init__(self, **kwargs):
+        super(ResNet34, self).__init__(resnet_version=34, **kwargs)
+
+
+class ResNet50(_ResNet):
+
+    def __init__(self, **kwargs):
+        super(ResNet50, self).__init__(resnet_version=50, **kwargs)
+
+
+class ResNet101(_ResNet):
+
+    def __init__(self, **kwargs):
+        super(ResNet101, self).__init__(resnet_version=101, **kwargs)
+
+
+class ResNet152(_ResNet):
+
+    def __init__(self, **kwargs):
+        super(ResNet152, self).__init__(resnet_version=152, **kwargs)

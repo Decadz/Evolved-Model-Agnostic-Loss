@@ -1,3 +1,4 @@
+
 from source.representation.tp import TaylorPolynomials
 from source.optimization.bp import backpropagation
 from source.optimization.inference import evaluate
@@ -20,10 +21,9 @@ creator.create("Individual", list, fitness=creator.MinimizeFit)
 class CovarianceMatrixAdaptation:
 
     def __init__(self, base_network, base_network_parameters, population_size, num_generations,
-                 filter_significant_digits, filter_rejection_threshold, filter_gradient_steps,
-                 filter_sample_size, base_gradient_steps, base_learning_rate, base_weight_decay,
-                 base_momentum, base_nesterov, base_batch_size, performance_metric, random_state,
-                 verbose, device, **kwargs):
+                 base_gradient_steps, base_learning_rate, base_weight_decay, base_momentum,
+                 base_nesterov, base_batch_size, performance_metric, random_state, verbose,
+                 device, **kwargs):
 
         """
         Implementation of a covariance matrix adaptation evolutionary strategy. This
@@ -35,8 +35,6 @@ class CovarianceMatrixAdaptation:
         :param local_search: Local search mechanism (optimization object).
         :param population_size: Population size [N+].
         :param num_generations: Number of generations [N+].
-        :param filter_significant_digits: Number of significant digits in gradient equivalence.
-        :param filter_rejection_threshold: Rejection threshold in rejection protocol.
         :param base_gradient_steps: Number of gradient for partial training session.
         :param base_learning_rate: Base learning rate for the base network/s.
         :param base_weight_decay: Base weight decay for the base network/s.
@@ -60,10 +58,6 @@ class CovarianceMatrixAdaptation:
         self.population_size = population_size
         self.num_generations = num_generations
 
-        # Evolutionary filter hyper-parameters.
-        self.significant_digits = filter_significant_digits
-        self.rejection_threshold = filter_rejection_threshold
-
         # Fitness evaluation hyper-parameters.
         self.base_gradient_steps = base_gradient_steps
         self.base_learning_rate = base_learning_rate
@@ -78,7 +72,7 @@ class CovarianceMatrixAdaptation:
         self.verbose = verbose
         self.device = device
 
-    def train(self, representation, training_tasks, validation_tasks):
+    def train(self, representation, training_tasks, validation_tasks, task_type):
 
         if representation != "tp":
             raise ValueError("Only Taylor polynomial representation is supported.")
@@ -94,21 +88,24 @@ class CovarianceMatrixAdaptation:
         for gen in tqdm(range(self.num_generations), desc="Evolution Progression", position=0,
                         disable=False if self.verbose >= 1 else True, leave=False):
 
+            print("\n", best_loss_fitness)
+
             # Generate a new population of candidate solutions.
             population = strategy.generate(ind_init=creator.Individual)
-
-            if gen != 0:  # Updating the population.
-                strategy.update(population)
 
             # Training each expression tree in the population.
             for solution in tqdm(population, desc="Generation Progression", position=1,
                                  disable=False if self.verbose >= 2 else True, leave=False):
 
                 # Generating the meta-network for training.
-                meta_loss_function = TaylorPolynomials(self.base_network_parameters["output_dim"], self.device)
-                for index, weight in enumerate(solution):
-                    weight_tensor = torch.nn.Parameter(torch.tensor(weight, requires_grad=False))
-                    meta_loss_function.register_parameter(name=str(index), param=weight_tensor)
+                meta_loss_function = TaylorPolynomials(
+                    self.base_network_parameters["output_dim"], self.device,
+                    logits_to_prob=True if task_type == "classification" else False,
+                    one_hot_encode=True if task_type == "classification" else False,
+                )
+
+                # Loading the weights into the meta loss function.
+                meta_loss_function.param = torch.nn.Parameter(torch.tensor(solution, requires_grad=False))
 
                 # Evaluating the fitness of the meta loss function.
                 fitness = self._fitness_evaluation(meta_loss_function, training_tasks, validation_tasks)
@@ -119,6 +116,9 @@ class CovarianceMatrixAdaptation:
                         solution.fitness.values[0] < best_loss_fitness:
                     best_loss_network = meta_loss_function
                     best_loss_fitness = fitness
+
+            # Updating the population.
+            strategy.update(population)
 
             # Recording the best fitness found thus far in the search.
             training_history.append(best_loss_fitness)

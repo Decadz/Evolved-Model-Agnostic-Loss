@@ -8,4 +8,3 @@ setuptools==51.0.0
 torch==1.8.1+cu111
 torchvision==0.9.1+cu111
 tqdm==4.54.1
-pyvista==0.33.3

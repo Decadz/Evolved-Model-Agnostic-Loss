@@ -2,16 +2,16 @@ import torch
 import math
 
 
-class WideResNet(torch.nn.Module):
+class _WideResNet(torch.nn.Module):
 
-    def __init__(self, depth=28, widen_factor=10, output_dim=10, log_softmax=False, **kwargs):
+    def __init__(self, depth=28, widen_factor=10, output_dim=10, **kwargs):
 
         """
         Implementation of WideResNet from the paper "Wide Residual
         Networks" by Sergey Zagoruyko and Nikos Komodakis.
         """
 
-        super(WideResNet, self).__init__()
+        super(_WideResNet, self).__init__()
 
         # Defining the network block architecture.
         channels = [16, 16 * widen_factor, 32 * widen_factor, 64 * widen_factor]
@@ -26,9 +26,6 @@ class WideResNet(torch.nn.Module):
         self.relu = torch.nn.ReLU(inplace=True)
         self.fc = torch.nn.Linear(channels[3], output_dim)
         self.nChannels = channels[3]
-
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
 
         # Initializing the weights of the network.
         self.reset()
@@ -53,7 +50,7 @@ class WideResNet(torch.nn.Module):
         out = self.relu(self.bn1(out))
         out = torch.nn.functional.avg_pool2d(out, 8)
         out = out.view(-1, self.nChannels)
-        return self.out(self.fc(out))
+        return self.fc(out)
 
 
 class _BasicBlock(torch.nn.Module):
@@ -96,3 +93,21 @@ class _NetworkBlock(torch.nn.Module):
 
     def forward(self, x):
         return self.layer(x)
+
+
+class WideResNet404(_WideResNet):
+
+    def __init__(self, **kwargs):
+        super(WideResNet404, self).__init__(depth=40, widen_factor=4, **kwargs)
+
+
+class WideResNet168(_WideResNet):
+
+    def __init__(self, **kwargs):
+        super(WideResNet168, self).__init__(depth=16, widen_factor=8, **kwargs)
+
+
+class WideResNet2810(_WideResNet):
+
+    def __init__(self, **kwargs):
+        super(WideResNet2810, self).__init__(depth=28, widen_factor=10, **kwargs)

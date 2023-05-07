@@ -3,7 +3,7 @@ import torch
 
 class AlexNet(torch.nn.Module):
 
-    def __init__(self, output_dim=10, log_softmax=False, **kwargs):
+    def __init__(self, output_dim=10, **kwargs):
 
         """
         Implementation of AlexNet from the paper "ImageNet Classification
@@ -37,9 +37,6 @@ class AlexNet(torch.nn.Module):
             torch.nn.Linear(4096, output_dim),
         )
 
-        # Output activation function.
-        self.out = torch.nn.LogSoftmax(dim=1) if log_softmax else torch.nn.Softmax(dim=1)
-
         # Initializing the weights of the network.
         self.reset()
 
@@ -54,5 +51,4 @@ class AlexNet(torch.nn.Module):
     def forward(self, x):
         out = self.features(x)
         out = out.view(out.size(0), 256 * 2 * 2)
-        out = self.classifier(out)
-        return self.out(out)
+        return self.classifier(out)
