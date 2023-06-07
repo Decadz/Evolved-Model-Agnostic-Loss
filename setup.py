@@ -10,8 +10,7 @@ install_requires = [
     "pyyaml",
     "matplotlib",
     "scikit-learn",
-    "tqdm",
-    "pyvista"
+    "tqdm"
 ]
 
 setup(

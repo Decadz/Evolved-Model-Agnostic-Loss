@@ -13,7 +13,7 @@ A [PyTorch](https://pytorch.org/) + [Higher](https://github.com/facebookresearch
 
 * Meta-Learning via Learned Loss Supervised ([Bechtle et al., 2021](https://arxiv.org/abs/1906.05374))
 * Optimizing Loss Functions Through Multivariate Taylor Polynomial Parameterization ([Gonzalez et al., 2021](https://arxiv.org/abs/2002.00059))
-* Genetic Programming for Loss Function Learning ([Liu et al., 2021](https://arxiv.org/abs/2102.04700)), ([Li et al., 2021](https://arxiv.org/abs/2103.14026))
+* Genetic Programming for Loss Function Learning (generalized form of [Liu et al., 2021](https://arxiv.org/abs/2102.04700) and [Li et al., 2021](https://arxiv.org/abs/2103.14026))
 
 ## Installation
 
@@ -54,7 +54,7 @@ or email me.
 
 ## Reference
 
-If you use our library please consider citing our paper with the following Bibtex entry:
+If you use our library or find our research of value please consider citing our paper with the following Bibtex entry:
 
 ```
 @article{raymond2022learning,
