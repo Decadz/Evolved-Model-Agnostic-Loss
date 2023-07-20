@@ -54,13 +54,21 @@ or email me.
 
 ## Reference
 
-If you use our library or find our research of value please consider citing our paper with the following Bibtex entry:
+If you use our library or find our research of value please consider citing our papers with the following Bibtex entry:
 
 ```
-@article{raymond2022learning,
+@article{raymond2023learning,
   title={Learning Symbolic Model-Agnostic Loss Functions via Meta-Learning},
+  author={Raymond, Christian and Chen, Qi and Xue, Bing},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year={2023},
+  publisher={IEEE}
+}
+@inproceedings{raymond2023fast,
+  title={Fast and Efficient Local-Search for Genetic Programming Based Loss Function Learning},
   author={Raymond, Christian and Chen, Qi and Xue, Bing and Zhang, Mengjie},
-  journal={arXiv preprint arXiv:2209.08907},
-  year={2022}
+  booktitle={Proceedings of the Genetic and Evolutionary Computation Conference},
+  pages={1184--1193},
+  year={2023}
 }
 ```
