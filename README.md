@@ -1,4 +1,6 @@
-# Evolved Model-Agnostic Loss
+<h1 align="center">
+Evolved Model-Agnostic Loss
+</h1>
 
 This repository contains code for reproducing the experiments in the paper 
 "[*Learning Symbolic Model-Agnostic Loss Functions via Meta-Learning*](https://arxiv.org/abs/2209.08907)" by 
