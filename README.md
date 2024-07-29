@@ -73,4 +73,10 @@ If you use our library or find our research of value please consider citing our 
   pages={1184--1193},
   year={2023}
 }
+@article{raymond2024meta,
+  title={Meta-Learning Loss Functions for Deep Neural Networks},
+  author={Raymond, Christian},
+  journal={arXiv preprint arXiv:2406.09713},
+  year={2024}
+}
 ```
